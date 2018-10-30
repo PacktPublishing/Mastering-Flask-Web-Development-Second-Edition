@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% import 'macros.html' as macros %}
+
+{% block title %}{{ tag.title }}{% endblock %}
+{% block leftbody %}
+<div class="row">
+    <div class="col bg-light">
+        <h1 class="text-center">Posts With Tag {{ tag }}</h1>
+    </div>
+</div>
+{{ macros.render_posts(posts, pagination=False) }}
+
+{% endblock %}

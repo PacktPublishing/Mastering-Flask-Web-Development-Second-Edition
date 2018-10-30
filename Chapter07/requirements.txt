@@ -1,0 +1,9 @@
+blinker
+Flask==1.0.2
+Flask-MongoEngine
+Flask-Login==0.4.1
+Flask-WTF==0.14.2
+flask-bcrypt
+flask-openid
+flask-dance
+Faker==0.8.13
