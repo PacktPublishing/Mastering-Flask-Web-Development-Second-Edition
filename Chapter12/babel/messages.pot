@@ -1,0 +1,51 @@
+# Translations template for PROJECT.
+# Copyright (C) 2018 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2018-08-19 15:54+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.4.0\n"
+
+#: webapp/templates/head.html:5
+msgid "Welcome to this Blog"
+msgstr ""
+
+#: webapp/templates/macros.html:57
+msgid "Read More"
+msgstr ""
+
+#: webapp/templates/navbar.html:11
+msgid "New Post"
+msgstr ""
+
+#: webapp/templates/navbar.html:40
+msgid "Logout"
+msgstr ""
+
+#: webapp/templates/navbar.html:45
+msgid "Login"
+msgstr ""
+
+#: webapp/templates/navbar.html:49
+msgid "Register"
+msgstr ""
+
+#: webapp/templates/blog/rightbody.html:3
+msgid "Recent Posts"
+msgstr ""
+
+#: webapp/templates/blog/rightbody.html:15
+msgid "Popular Tags"
+msgstr ""
+
