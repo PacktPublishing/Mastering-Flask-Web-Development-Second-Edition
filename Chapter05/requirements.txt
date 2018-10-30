@@ -1,0 +1,5 @@
+Flask
+Flask-SQLAlchemy==2.3.2
+Flask-Migrate==2.1.1
+Flask-WTF==0.14.2
+Faker==0.8.13
