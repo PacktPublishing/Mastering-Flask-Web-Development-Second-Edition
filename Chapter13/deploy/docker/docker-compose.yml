@@ -1,0 +1,32 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    env_file:
+      - prod.env
+  rmq:
+    image: rabbitmq:3-management
+    env_file:
+      - prod.env
+    ports:
+      - 15672:15672
+  redis:
+      container_name: redis
+      image: redis
+  worker:
+    image: myblog_worker:latest
+    depends_on:
+      - db
+      - rmq
+    env_file:
+      - prod.env
+  frontend:
+    image: myblog
+    depends_on:
+      - db
+      - rmq
+    env_file:
+      - prod.env
+    restart: always
+    ports:
+      - 80:80

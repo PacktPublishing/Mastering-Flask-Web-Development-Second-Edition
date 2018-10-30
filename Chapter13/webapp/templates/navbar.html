@@ -1,0 +1,54 @@
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="{{url_for('blog.home')}}">Home <span class="sr-only">(current)</span></a>
+            </li>
+            {% if current_user.is_authenticated and current_user.has_role('poster') %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{url_for('blog.new_post')}}">{{_('New Post')}}<span class="sr-only">(current)</span></a>
+            </li>
+            {% endif %}
+            {% if current_user.is_authenticated and current_user.has_role('admin') %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{url_for('admin.index')}}">Admin<span class="sr-only">(current)</span></a>
+            </li>
+            {% endif %}
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+                    Lang
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="{{url_for('babel.index', locale='en')}}">en</a>
+                    <a class="dropdown-item" href="{{url_for('babel.index', locale='pt')}}">pt</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{url_for('blog.home')}}"></a>
+            </li>
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link" href="#user">
+                    <i class="fa fa-fw fa-sign-out"></i>{{ current_user }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{url_for('auth.logout')}}">
+                <i class="fa fa-fw fa-sign-out"></i>{{_('Logout')}}</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{url_for('auth.login')}}">
+                <i class="fa fa-fw fa-sign-in"></i>{{_('Login')}}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{url_for('auth.register')}}">
+                <i class="fa fa-fw fa-sign-in"></i>{{_('Register')}}</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>

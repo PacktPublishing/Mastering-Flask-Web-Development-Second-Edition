@@ -1,0 +1,731 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Provision MyBlog Hands-On Web Development with Flask (Daniel Gaspar)
+Parameters:
+  ApplicationName:
+    Description: The application name
+    Type: String
+    Default: ecs001
+  Environment:
+    Description: Application environment that will use the Stack
+    Type: String
+    Default: prod
+    AllowedValues:
+    - dev
+    - stg
+    - prod
+  InstanceType:
+    Description: Which instance type should we use to build the ECS cluster?
+    Type: String
+    Default: t2.medium
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+    MinLength: '1'
+  ClusterSize:
+    Description: How many ECS hosts do you want to initially deploy?
+    Type: Number
+    Default: 2
+  VPC:
+    Description: Choose which VPC this ECS cluster should be deployed to
+    Type: AWS::EC2::VPC::Id
+  Subnets:
+    Description: Choose which subnets this ECS cluster should be deployed to
+    Type: List<AWS::EC2::Subnet::Id>
+  DockerFrontEndImageArn:
+    Description: Frontend Docker ECR Arn
+    Type: String
+    Default: 633393569065.dkr.ecr.eu-central-1.amazonaws.com/myblog
+  DockerWorkerImageArn:
+    Description: Worker Docker ECR Arn
+    Type: String
+    Default: 633393569065.dkr.ecr.eu-central-1.amazonaws.com/myblog_worker
+  DBUsername:
+    Description: RDS username
+    Type: String
+    Default: myblog
+  DBPassword:
+    Description: RDS password
+    Type: String
+    Default: password
+    NoEcho: true
+  RMQUsername:
+    Description: RMQ username
+    Type: String
+    Default: rabbitmq
+  RMQPassword:
+    Description: RMQ password
+    Type: String
+    Default: rabbitmq
+    NoEcho: true
+
+Mappings:
+  AWSRegionToAMI:
+    us-east-2:
+        AMI: ami-b86a5ddd
+    us-east-1:
+        AMI: ami-a7a242da
+    us-west-2:
+        AMI: ami-92e06fea
+    us-west-1:
+        AMI: ami-9ad4dcfa
+    eu-west-3:
+        AMI: ami-698b3d14
+    eu-west-2:
+        AMI: ami-f4e20693
+    eu-west-1:
+        AMI: ami-0693ed7f
+    eu-central-1:
+        AMI: ami-0799fa68
+    ap-northeast-2:
+        AMI: ami-a5dd70cb
+    ap-northeast-1:
+        AMI: ami-68ef940e
+    ap-southeast-2:
+        AMI: ami-ee884f8c
+    ap-southeast-1:
+        AMI: ami-0a622c76
+    ca-central-1:
+        AMI: ami-5ac94e3e
+    ap-south-1:
+        AMI: ami-2e461a41
+    sa-east-1:
+        AMI: ami-d44008b8
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: System Information (Tags)
+      Parameters:
+      - Environment
+      - ApplicationName
+    - Label:
+        default: Networking
+      Parameters:
+      - VPC
+      - Subnets
+    - Label:
+        default: ECS Configuration
+      Parameters:
+      - ClusterSize
+      - InstanceType
+      - KeyName
+    - Label:
+        default: Docker Services Configuration
+      Parameters:
+      - DockerFrontEndImageArn
+      - DockerWorkerImageArn
+      - DBUsername
+      - DBPassword
+      - RMQUsername
+      - RMQPassword
+
+Resources:
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: !Sub ${Environment}-${ApplicationName}
+      SubnetIds: !Ref Subnets
+
+  DBSecurityGroup:
+    DependsOn: SecurityGroup
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to the service on ECS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '3306'
+          ToPort: '3306'
+          CidrIp: '0.0.0.0/0'
+
+  DB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: "30"
+      DBInstanceClass: "db.t2.medium"
+      Engine: "MariaDB"
+      EngineVersion: "10.2.11"
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - Ref: DBSecurityGroup
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to the service on ECS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '5672'
+          ToPort: '5672'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '6379'
+          ToPort: '6379'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+
+  ECSCluster:
+    Type: "AWS::ECS::Cluster"
+    Properties:
+      ClusterName: !Sub ${Environment}-${ApplicationName}
+
+  ECSAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Ref Subnets
+      LaunchConfigurationName: !Ref ECSLaunchConfiguration
+      MinSize: !Ref ClusterSize
+      MaxSize: !Ref ClusterSize
+      DesiredCapacity: !Ref ClusterSize
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-${ApplicationName}
+          PropagateAtLaunch: true
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        PauseTime: PT15M
+        SuspendProcesses:
+          - HealthCheck
+          - ReplaceUnhealthy
+          - AZRebalance
+          - AlarmNotification
+          - ScheduledActions
+        WaitOnResourceSignals: true
+
+  ECSLaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      KeyName:
+        Ref: KeyName
+      ImageId:  !FindInMap [AWSRegionToAMI, !Ref "AWS::Region", AMI]
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref SecurityGroup
+      IamInstanceProfile: !Ref ECSInstanceProfile
+      UserData:
+        "Fn::Base64": !Sub |
+          #!/bin/bash
+          yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+          yum install -y aws-cfn-bootstrap hibagent
+          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+          /usr/bin/enable-ec2-spot-hibernation
+
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              awslogs: []
+          commands:
+            01_add_instance_to_cluster:
+              command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+          files:
+            "/etc/cfn/cfn-hup.conf":
+              mode: 000400
+              owner: root
+              group: root
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.ECSLaunchConfiguration.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+            "/etc/awslogs/awscli.conf":
+              content: !Sub |
+                [plugins]
+                cwlogs = cwlogs
+                [default]
+                region = ${AWS::Region}
+            "/etc/awslogs/awslogs.conf":
+              content: !Sub |
+                [general]
+                state_file = /var/lib/awslogs/agent-state
+                [/var/log/dmesg]
+                file = /var/log/dmesg
+                log_group_name = ${ECSCluster}-/var/log/dmesg
+                log_stream_name = ${ECSCluster}
+                [/var/log/messages]
+                file = /var/log/messages
+                log_group_name = ${ECSCluster}-/var/log/messages
+                log_stream_name = ${ECSCluster}
+                datetime_format = %b %d %H:%M:%S
+                [/var/log/docker]
+                file = /var/log/docker
+                log_group_name = ${ECSCluster}-/var/log/docker
+                log_stream_name = ${ECSCluster}
+                datetime_format = %Y-%m-%dT%H:%M:%S.%f
+                [/var/log/ecs/ecs-init.log]
+                file = /var/log/ecs/ecs-init.log.*
+                log_group_name = ${ECSCluster}-/var/log/ecs/ecs-init.log
+                log_stream_name = ${ECSCluster}
+                datetime_format = %Y-%m-%dT%H:%M:%SZ
+                [/var/log/ecs/ecs-agent.log]
+                file = /var/log/ecs/ecs-agent.log.*
+                log_group_name = ${ECSCluster}-/var/log/ecs/ecs-agent.log
+                log_stream_name = ${ECSCluster}
+                datetime_format = %Y-%m-%dT%H:%M:%SZ
+                [/var/log/ecs/audit.log]
+                file = /var/log/ecs/audit.log.*
+                log_group_name = ${ECSCluster}-/var/log/ecs/audit.log
+                log_stream_name = ${ECSCluster}
+                datetime_format = %Y-%m-%dT%H:%M:%SZ
+              services:
+                sysvinit:
+                  cfn-hup:
+                    enabled: true
+                    ensureRunning: true
+                    files:
+                      - /etc/cfn/cfn-hup.conf
+                      - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+                    awslogs:
+                      enabled: true
+                      ensureRunning: true
+                      files:
+                        - /etc/awslogs/awslogs.conf
+                        - /etc/awslogs/awscli.conf
+
+  # This IAM Role is attached to all of the ECS hosts. It is based on the default role
+  # published here:
+  # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
+  #
+  # You can add other IAM policy statements here to allow access from your ECS hosts
+  # to other AWS services. Please note that this role will be used by ALL containers
+  # running on the ECS host.
+
+  ECSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: !Sub ${Environment}-${ApplicationName}-ECSRole-${AWS::Region}
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            }
+          }]
+        }
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument: |
+            {
+              "Statement": [{
+                "Effect": "Allow",
+                "Action": [
+                  "ecs:CreateCluster",
+                  "ecs:DeregisterContainerInstance",
+                  "ecs:DiscoverPollEndpoint",
+                  "ecs:Poll",
+                  "ecs:RegisterContainerInstance",
+                  "ecs:StartTelemetrySession",
+                  "ecs:Submit*",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents",
+                  "ecr:BatchCheckLayerAvailability",
+                  "ecr:BatchGetImage",
+                  "ecr:GetDownloadUrlForLayer",
+                  "ecr:GetAuthorizationToken",
+                  "ssm:DescribeAssociation",
+                  "ssm:GetDeployablePatchSnapshotForInstance",
+                  "ssm:GetDocument",
+                  "ssm:GetManifest",
+                  "ssm:GetParameters",
+                  "ssm:ListAssociations",
+                  "ssm:ListInstanceAssociations",
+                  "ssm:PutInventory",
+                  "ssm:PutComplianceItems",
+                  "ssm:PutConfigurePackageResult",
+                  "ssm:UpdateAssociationStatus",
+                  "ssm:UpdateInstanceAssociationStatus",
+                  "ssm:UpdateInstanceInformation",
+                  "ec2messages:AcknowledgeMessage",
+                  "ec2messages:DeleteMessage",
+                  "ec2messages:FailMessage",
+                  "ec2messages:GetEndpoint",
+                  "ec2messages:GetMessages",
+                  "ec2messages:SendReply",
+                  "cloudwatch:PutMetricData",
+                  "ec2:DescribeInstanceStatus",
+                  "ds:CreateComputer",
+                  "ds:DescribeDirectories",
+                  "logs:CreateLogGroup",
+                  "logs:CreateLogStream",
+                  "logs:DescribeLogGroups",
+                  "logs:DescribeLogStreams",
+                  "logs:PutLogEvents",
+                  "s3:PutObject",
+                  "s3:GetObject",
+                  "s3:AbortMultipartUpload",
+                  "s3:ListMultipartUploadParts",
+                  "s3:ListBucket",
+                  "s3:ListBucketMultipartUploads"
+                ],
+                "Resource": "*"
+              }]
+              }
+  ECSInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ECSRole
+
+  ECSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ecs.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - elasticloadbalancing:Describe*
+            - elasticloadbalancing:DeregisterInstancesFromLoadBalancer
+            - elasticloadbalancing:RegisterInstancesWithLoadBalancer
+            - ec2:Describe*
+            - ec2:AuthorizeSecurityGroupIngress
+            Resource: "*"
+
+  ECSServiceAutoScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Action:
+          - 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service:
+            - application-autoscaling.amazonaws.com
+      Path: /
+      Policies:
+      - PolicyName: ecs-service-autoscaling
+        PolicyDocument:
+          Statement:
+            Effect: Allow
+            Action:
+            - application-autoscaling:*
+            - cloudwatch:DescribeAlarms
+            - cloudwatch:PutMetricAlarm
+            - ecs:DescribeServices
+            - ecs:UpdateService
+            Resource: "*"
+
+  FrontEndTask:
+    DependsOn: WorkerTask
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        -
+          Name: "frontend"
+          Image: !Ref DockerFrontEndImageArn
+          Cpu: "10"
+          PortMappings:
+            -
+              ContainerPort: "80"
+              HostPort: "80"
+          Memory: "500"
+          Environment:
+            -
+              Name: "WEBAPP_ENV"
+              Value: !Ref Environment
+            -
+              Name: "CELERY_BROKER_URL"
+              Value: !Sub "amqp://${RMQUsername}:${RMQPassword}@${ELBRMQ.DNSName}:5672//"
+            -
+              Name: "DB_URI"
+              Value: !Sub "mysql://${DBUsername}:${DBPassword}@${DB.Endpoint.Address}:3306/myblog"
+            -
+              Name: "REDIS_HOST"
+              Value: !Sub ${ELBRedis.DNSName}
+
+  WorkerTask:
+    DependsOn: DB
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        -
+          Name: "worker"
+          Image: !Ref DockerWorkerImageArn
+          Cpu: "10"
+          Memory: "500"
+          Environment:
+            -
+              Name: "WEBAPP_ENV"
+              Value: !Ref Environment
+            -
+              Name: "CELERY_BROKER_URL"
+              Value: !Sub "amqp://${RMQUsername}:${RMQPassword}@${ELBRMQ.DNSName}:5672//"
+            -
+              Name: "DB_URI"
+              Value: !Sub "mysql://${DBUsername}:${DBPassword}@${DB.Endpoint.Address}:3306/myblog"
+            -
+              Name: "DB_HOST"
+              Value: !Sub "${DB.Endpoint.Address}"
+            -
+              Name: "MYSQL_USER"
+              Value: !Ref DBUsername
+            -
+              Name: "MYSQL_PASSWORD"
+              Value: !Ref DBPassword
+            -
+              Name: "REDIS_HOST"
+              Value: !Sub ${ELBRedis.DNSName}
+
+  RMQTask:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        -
+          Name: "rmq"
+          Image: rabbitmq:3-management
+          Cpu: "10"
+          PortMappings:
+            -
+              ContainerPort: "5672"
+              HostPort: "5672"
+            -
+              ContainerPort: "15672"
+              HostPort: "15672"
+          Memory: "500"
+          Environment:
+            -
+              Name: "RABBITMQ_ERLANG_COOKIE"
+              Value: "SWQOKODSQALRPCLNMEQG"
+            -
+              Name: "RABBITMQ_DEFAULT_USER"
+              Value: !Ref RMQUsername
+            -
+              Name: "RABBITMQ_DEFAULT_PASS"
+              Value: !Ref RMQPassword
+            -
+              Name: "RABBITMQ_DEFAULT_VHOST"
+              Value: "/"
+
+  RedisTask:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        -
+          Name: "redis"
+          Image: redis
+          Cpu: "10"
+          PortMappings:
+            -
+              ContainerPort: "6379"
+              HostPort: "6379"
+          Memory: "500"
+
+  MyBlogFrontendService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      Cluster: !Ref ECSCluster
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: 2
+      TaskDefinition: !Ref FrontEndTask
+      LoadBalancers:
+        -
+          ContainerName: 'frontend'
+          ContainerPort: 80
+          LoadBalancerName: !Ref ELBFrontEnd
+    DependsOn:
+      - ECSServiceRole
+      - FrontEndTask
+
+  MyBlogWorkerService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      Cluster: !Ref ECSCluster
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: 2
+      TaskDefinition: !Ref WorkerTask
+    DependsOn:
+      - ECSServiceRole
+      - FrontEndTask
+
+  MyBlogRMQService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      Cluster: !Ref ECSCluster
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 50
+      DesiredCount: 1
+      TaskDefinition: !Ref RMQTask
+      LoadBalancers:
+        -
+          ContainerName: 'rmq'
+          ContainerPort: 5672
+          LoadBalancerName: !Ref ELBRMQ
+    DependsOn:
+      - ECSServiceRole
+      - FrontEndTask
+
+  MyBlogRedisService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      Cluster: !Ref ECSCluster
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 50
+      DesiredCount: 1
+      TaskDefinition: !Ref RedisTask
+      LoadBalancers:
+        -
+          ContainerName: 'redis'
+          ContainerPort: 6379
+          LoadBalancerName: !Ref ELBRedis
+
+    DependsOn:
+      - ECSServiceRole
+      - FrontEndTask
+
+  ELBRedisSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to the service on the ELB
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '6379'
+          ToPort: '6379'
+          CidrIp: '0.0.0.0/0'
+
+  ELBRedis:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      SecurityGroups:
+      - Fn::GetAtt:
+        - ELBRedisSecurityGroup
+        - GroupId
+      Subnets:
+        Ref: Subnets
+      Scheme: internet-facing
+      CrossZone: true
+      Listeners:
+      - LoadBalancerPort: '6379'
+        InstancePort: '6379'
+        Protocol: TCP
+        InstanceProtocol: TCP
+      HealthCheck:
+        Target: TCP:6379
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '3'
+        Interval: '10'
+        Timeout: '5'
+
+  ELBRMQSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to the service on the ELB
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '5672'
+          ToPort: '5672'
+          CidrIp: '0.0.0.0/0'
+
+  ELBRMQ:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      SecurityGroups:
+      - Fn::GetAtt:
+        - ELBRMQSecurityGroup
+        - GroupId
+      Subnets:
+        Ref: Subnets
+      Scheme: internet-facing
+      CrossZone: true
+      Listeners:
+      - LoadBalancerPort: '5672'
+        InstancePort: '5672'
+        Protocol: TCP
+        InstanceProtocol: TCP
+      HealthCheck:
+        Target: TCP:5672
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '3'
+        Interval: '10'
+        Timeout: '5'
+
+  ELBFrontEndSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable access to the service on the ELB
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+
+  ELBFrontEnd:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      SecurityGroups:
+      - Fn::GetAtt:
+        - ELBFrontEndSecurityGroup
+        - GroupId
+      Subnets:
+        Ref: Subnets
+      Scheme: internet-facing
+      CrossZone: true
+      Listeners:
+      - LoadBalancerPort: '80'
+        InstancePort: '80'
+        Protocol: HTTP
+        InstanceProtocol: HTTP
+      HealthCheck:
+        Target: TCP:80
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '3'
+        Interval: '10'
+        Timeout: '5'
+
+Outputs:
+  MyBlogURL:
+    Description: Frontend ELB DNSName
+    Value: !Sub http://${ELBFrontEnd.DNSName}
+

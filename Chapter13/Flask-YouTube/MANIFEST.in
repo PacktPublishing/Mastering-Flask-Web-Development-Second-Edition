@@ -1,0 +1,2 @@
+prune *.pyc
+recursive-include flask_youtube/templates *
