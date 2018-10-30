@@ -1,0 +1,12 @@
+blinker
+Flask==1.0.2
+Flask-Login==0.4.1
+Flask-SQLAlchemy==2.3.2
+Flask-Migrate==2.1.1
+Flask-WTF==0.14.2
+flask-restful
+flask-jwt-extended
+flask-bcrypt
+flask-openid
+flask-dance
+Faker==0.8.13
