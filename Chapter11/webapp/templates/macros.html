@@ -1,0 +1,61 @@
+{% macro render_pagination(pagination, endpoint) %}
+<nav aria-label="Page navigation example">
+    <ul class="pagination">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('blog.home', page=pagination.prev().page) }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+                <span class="sr-only">Previous</span>
+            </a>
+        </li>
+        {% endif %}
+        {% for page in pagination.iter_pages() %}
+        {% if page %}
+        {% if page != pagination.page %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
+        </li>
+        {% else %}
+        <li class="page-item active">
+            <a class="page-link" href="">{{ page }}</a>
+        </li>
+        {% endif %}
+        {% else %}
+        <li class="page-item">
+            <a class="page-link">…</a>
+        <li>
+            {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('blog.home', page=pagination.next().page) }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+                <span class="sr-only">Next</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endmacro %}
+
+{% macro render_posts(posts, pagination=True) %}
+    {% if pagination %}
+        {% set _posts = posts.items %}
+    {% else %}
+        {% set _posts = posts %}
+    {% endif %}
+
+    {% for post in _posts %}
+        <div >
+            <h1>
+                <a class="text-dark" href="{{ url_for('blog.post', post_id=post.id) }}">{{ post.title }}</a>
+            </h1>
+        </div>
+        <div class="row">
+            <div class="col">
+                {{ post.text | truncate(500) | safe }}
+                <a href="{{ url_for('blog.post', post_id=post.id) }}">{{_('Read More')}}</a>
+            </div>
+        </div>
+    {% endfor %}
+{% endmacro %}
