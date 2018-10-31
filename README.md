@@ -5,19 +5,24 @@ Mastering Flask Web Development, published by Packt
 
 This is the code repository for [Mastering Flask Web Development](https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405), published by Packt.
 
-**Subtitle from EPIC**
+**Build enterprise-grade, scalable Python web applications**
 
 ## What is this book about?
-First Paragraph from the Long Description
+Flask is a popular Python framework known for its lightweight and modular design. Mastering Flask Web Development will take you on a complete tour of the Flask environment and teach you how to build a production-ready application. 
 
-This book covers the following exciting features: <First 5 What you'll learn points>
-* Learn how to manage users, groups, and permissions
-* Encrypt and decrypt disks with Linux Unified Key Setup /Luks
-* Setup SSH for remote access, and connect it to other nodes
-* Understand how to add, remove, and search for packages
-* Use NFS and Samba to share directories with other users
+This book covers the following exciting features:
 
-If you feel this book is for you, get your [copy](https://www.amazon.com/dp/10DigitISBN) today!
+* Develop a Flask extension using best practices
+
+* Implement various authentication methods: LDAP, JWT, Database, OAuth, and OpenID
+
+* Learn how to develop role-based access security and become an expert on Jinja2 templates
+
+* Build tests for your applications and APIs
+
+* Install and configure a distributed task queue using Celery and RabbitMQ
+
+If you feel this book is for you, get your [copy](https://www.amazon.com/dp/1788995406) today!
 
 <a href="https://www.packtpub.com/?utm_source=github&utm_medium=banner&utm_campaign=GitHubBanner"><img src="https://raw.githubusercontent.com/PacktPublishing/GitHub/master/GitHub.png" 
 alt="https://www.packtpub.com/" border="5" /></a>
@@ -28,10 +33,14 @@ All of the code is organized into folders. For example, Chapter02.
 
 The code will look like the following:
 ```
-if (test expression)
-{
-  Statement upon condition is true
-}
+from flask import g
+....
+# Set some key with some value on a request context
+g.some_key = "some_value"
+# Get a key
+v = g.some_key
+# Get and remove a key
+v = g.pop('some_key', "default_if_not_present")
 ```
 
 **Following is what you need for this book:**
@@ -43,47 +52,16 @@ With the following software and hardware list you can run all code files present
 
 | Chapter  | Software required                   | OS required                        |
 | -------- | ------------------------------------| -----------------------------------|
-| 1        | R version 3.3.0                     | Windows, Mac OS X, and Linux (Any) |
-| 2        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 3        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 4        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 5        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 6        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 7        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 8        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 9        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 10        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 11        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 12        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 13        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 14        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-| 15        | Rstudio Desktop 0.99.903            | Windows, Mac OS X, and Linux (Any) |
-
-
-We also provide a PDF file that has color images of the screenshots/diagrams used in this book. [Click here to download it](Graphics Bundle Link).
-
-## Code in Action
-
-Click on the following link to see the Code in Action:
-
-[Placeholder link](www.youtube.com/URL)
+| 1 - 13   | Python                              | Windows, Mac OS X, and Linux (Any) |
 
 ### Related products <Other books you may enjoy>
-* Linux: Powerful Server Administration [[Packt]](https://www.packtpub.com/networking-and-servers/linux-powerful-server-administration?utm_source=github&utm_medium=repository&utm_campaign=9781788293778) [[Amazon]](https://www.amazon.com/dp/1788293770)
+* Python Testing Cookbook - Second Edition [[Packt]](https://www.packtpub.com/application-development/python-testing-cookbook-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781787122529) [[Amazon]](https://www.amazon.com/dp/1849514666)
 
-* Linux Device Drivers Development [[Packt]](https://www.packtpub.com/networking-and-servers/linux-device-drivers-development?utm_source=github&utm_medium=repository&utm_campaign=9781785280009) [[Amazon]](https://www.amazon.com/dp/1788293770)
+* Building Django 2.0 Web Applications [[Packt]](https://www.packtpub.com/web-development/building-django-20-web-applications?utm_source=github&utm_medium=repository&utm_campaign=9781787286214) [[Amazon]](https://www.amazon.com/dp/1787286215)
 
-## Get to Know the Author(s)
-**Author Name**
-Bio
-
-**Author Name**
-Bio
-
-
-## Other books by the authors
-* [Mastering Linux Network Administration](https://www.packtpub.com/networking-and-servers/mastering-linux-network-administration?utm_source=github&utm_medium=repository&utm_campaign=9781784399597)
-* [Linux Mint Essentials](https://www.packtpub.com/networking-and-servers/linux-mint-essentials?utm_source=github&utm_medium=repository&utm_campaign=9781782168157)
+## Get to Know the Author
+**Daniel Gaspar**
+is a programmer and DevOps engineer with more than 20 years' experience. He has worked in a wide range of sectors, including government and finance. He is currently working at Miniclip (the global leader in digital games). He uses a wide range of tools in his daily work, but Flask caught his attention because of its excellently designed API and simplicity. Daniel is an OSS and Python enthusiast, and has developed a widely used extension/framework named Flask-AppBuilder, used by Airbnb on Superset and AirFlow.
 
 ### Suggestions and Feedback
 [Click here](https://docs.google.com/forms/d/e/1FAIpQLSdy7dATC6QmEL81FIUuymZ0Wy9vH1jHkvpY57OiMeKGqib_Ow/viewform) if you have any feedback or suggestions.
