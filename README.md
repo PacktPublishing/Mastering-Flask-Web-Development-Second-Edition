@@ -1,7 +1,7 @@
 # Mastering-Flask-Web-Development
 Mastering Flask Web Development, published by Packt
 
-<a href="https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405"><img src="https://www.packtpub.com/sites/default/files/B10232_MockupCover.png" alt="Mastering Flask Web Development" height="256px" align="right"></a>
+<a href="https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405"><img src="https://www.packtpub.com/media/catalog/product/cache/e4d64343b1bc593f1c5348fe05efa4a6/b/1/b10232.png" alt="Mastering Flask Web Development" height="256px" align="right"></a>
 
 This is the code repository for [Mastering Flask Web Development](https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405), published by Packt.
 
@@ -11,15 +11,10 @@ This is the code repository for [Mastering Flask Web Development](https://www.pa
 Flask is a popular Python framework known for its lightweight and modular design. Mastering Flask Web Development will take you on a complete tour of the Flask environment and teach you how to build a production-ready application. 
 
 This book covers the following exciting features:
-
 * Develop a Flask extension using best practices
-
 * Implement various authentication methods: LDAP, JWT, Database, OAuth, and OpenID
-
 * Learn how to develop role-based access security and become an expert on Jinja2 templates
-
 * Build tests for your applications and APIs
-
 * Install and configure a distributed task queue using Celery and RabbitMQ
 
 If you feel this book is for you, get your [copy](https://www.amazon.com/dp/1788995406) today!
@@ -44,7 +39,7 @@ v = g.pop('some_key', "default_if_not_present")
 ```
 
 **Following is what you need for this book:**
-Copy and paste the Audience section from the EPIC.
+The ideal target audience for this book would be Python developers who want to use Flask and its advanced features to create Enterprise grade and lightweight applications. The book is for those who have some exposure of Flask and want to take it from introductory to master level.
 
 With the following software and hardware list you can run all code files present in the book (Chapter 1-13).
 
