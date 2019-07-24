@@ -1,9 +1,8 @@
-# Mastering-Flask-Web-Development
-Mastering Flask Web Development, published by Packt
+# Mastering Flask Web Development - Second Edition
 
-<a href="https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405"><img src="https://www.packtpub.com/media/catalog/product/cache/e4d64343b1bc593f1c5348fe05efa4a6/b/1/b10232.png" alt="Mastering Flask Web Development" height="256px" align="right"></a>
+<a href="https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405"><img src="https://www.packtpub.com/media/catalog/product/cache/e4d64343b1bc593f1c5348fe05efa4a6/b/1/b10232.png" alt="Mastering Flask Web Development - Second Edition" height="256px" align="right"></a>
 
-This is the code repository for [Mastering Flask Web Development](https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405), published by Packt.
+This is the code repository for [Mastering Flask Web Development - Second Edition](https://www.packtpub.com/web-development/hands-web-development-flask-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781788995405), published by Packt.
 
 **Build enterprise-grade, scalable Python web applications**
 
