@@ -49,7 +49,7 @@ With the following software and hardware list you can run all code files present
 | 1 - 13   | Python                              | Windows, Mac OS X, and Linux (Any) |
 
 ### Related products <Other books you may enjoy>
-* Python Testing Cookbook - Second Edition [[Packt]](https://www.packtpub.com/application-development/python-testing-cookbook-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781787122529) [[Amazon]](https://www.amazon.com/dp/1849514666)
+* Python Testing Cookbook - Second Edition [[Packt]](https://www.packtpub.com/application-development/python-testing-cookbook-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781787122529) [[Amazon]](https://www.amazon.com/dp/1787122522)
 
 * Building Django 2.0 Web Applications [[Packt]](https://www.packtpub.com/web-development/building-django-20-web-applications?utm_source=github&utm_medium=repository&utm_campaign=9781787286214) [[Amazon]](https://www.amazon.com/dp/1787286215)
 
