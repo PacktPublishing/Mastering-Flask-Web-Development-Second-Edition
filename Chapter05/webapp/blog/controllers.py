@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import desc, func
 from flask import render_template, Blueprint, flash, redirect, url_for, current_app
 from .models import db, Post, Tag, Comment, User, tags
 from .forms import CommentForm
@@ -15,7 +15,7 @@ def sidebar_data():
     recent = Post.query.order_by(Post.publish_date.desc()).limit(5).all()
     top_tags = db.session.query(
         Tag, func.count(tags.c.post_id).label('total')
-    ).join(tags).group_by(Tag).order_by('total DESC').limit(5).all()
+    ).join(tags).group_by(Tag).order_by(desc('total')).limit(5).all()
 
     return recent, top_tags
 

@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_wtf import FlaskForm as Form
 from wtforms import StringField, TextAreaField
 from wtforms.validators import DataRequired, Length
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from config import DevConfig
 
 app = Flask(__name__)
@@ -93,7 +93,7 @@ def sidebar_data():
     recent = Post.query.order_by(Post.publish_date.desc()).limit(5).all()
     top_tags = db.session.query(
         Tag, func.count(tags.c.post_id).label('total')
-    ).join(tags).group_by(Tag).order_by('total DESC').limit(5).all()
+    ).join(tags).group_by(Tag).order_by(desc('total')).limit(5).all()
 
     return recent, top_tags
 
