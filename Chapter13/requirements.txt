@@ -2,7 +2,7 @@ mysqlclient
 click
 blinker
 redis
-Flask==0.12.4
+Flask==1.0
 Flask-Login>0.3.0
 Flask-SQLAlchemy==2.3.2
 Flask-Migrate==2.1.1
